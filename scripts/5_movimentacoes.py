@@ -52,10 +52,10 @@ vendas = negociacoes[['Codigo', 'Instituicao', 'Quantidade (Venda)', 'Preco Medi
 #concatena os dataframes de compras e vendas
 negociacoes = pd.concat([compras, vendas], ignore_index=True)
 
-# check if "NUBR33" and "FBOK34" exist in "Codigo" column and replace them
+# checa se há algum código que não está na carteira
 negociacoes['Codigo'] = negociacoes['Codigo'].replace({'NUBR33': 'ROXO34', 'FBOK34': 'M1TA34'})
 
-# drop rows with 0 values in the 'Quantidade' column
+# apaga as negociações que não estão na carteira
 negociacoes = negociacoes[negociacoes['Quantidade'] != 0]
 
 #reorganiza as colunas

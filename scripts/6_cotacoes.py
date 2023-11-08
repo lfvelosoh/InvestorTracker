@@ -3,7 +3,7 @@ sys.path.insert(0, ".venv/Lib/site-packages")
 import yfinance as yf
 import pandas as pd
 
-df = pd.read_csv('./resultados/codigos.csv') # read the csv file
+df = pd.read_csv('./resultados/codigos.csv') # le o arquivo csv com os códigos
 tickers = df['codigo'].map(lambda x: x + '.SA') # adiciona a extensão .SA para realizar a pesquisa no Yahoo Finance
 
 # função para pegar os preços atuais

@@ -26,40 +26,39 @@ arquivo = pd.read_excel(f'{pasta}/{ultimo_arquivo}', sheet_name=None, dtype={
     'Administrador': str,
 })
 
-# create a dataframe with the name of each column
+# cria um dataframe com o nome de cada sheet
 df_sheet_names = pd.DataFrame({'NOME_ATUAL': arquivo.keys()})
 
-# replace accented letters with unaccented letters, remove spaces and replace with underscore
+# remove acentos e espaços do nome das sheets
 df_sheet_names['NOME_FINAL'] = df_sheet_names['NOME_ATUAL'].apply(lambda x: unidecode(x))
 df_sheet_names['NOME_FINAL'] = df_sheet_names['NOME_FINAL'].str.replace('Posicao - ', '')
 df_sheet_names['NOME_FINAL'] = df_sheet_names['NOME_FINAL'].str.replace(' ', '_')
 
-# create a dictionary with the name of each column in each sheet
+# ccria um dicionário com os dataframes de cada sheet
 dfs = {}
 for sheet_name in arquivo.keys():
     if sheet_name in ['Posição - Ações', 'Posição - BDR', 'Posição - ETF', 'Posição - Fundos']:
-        df = arquivo[sheet_name].dropna().copy()  # Adicione .copy() aqui
+        df = arquivo[sheet_name].dropna().copy()
         new_key = df_sheet_names.loc[df_sheet_names['NOME_ATUAL'] == sheet_name, 'NOME_FINAL'].iloc[0]
         df.loc[:, 'Classe'] = new_key
         dfs[new_key] = df
 
 carteira = pd.concat(dfs.values(), ignore_index=True)
 
-# remove accents from column names
+# remove os espaços e acentos das colunas
 carteira.columns = [unidecode(col) for col in carteira.columns]
 carteira.columns = [col.lower().replace(' ', '_') for col in carteira.columns]
 
-# merge columns cnpj do Fundo and cnpj da Empresa, and Escriturador and administrador
+# unifica as colunas de cnpj e administrador
 carteira.loc[:, 'cnpj'] = carteira['cnpj_do_fundo'].fillna(carteira['cnpj_da_empresa'])
 carteira['administrador'] = carteira['administrador'].fillna(carteira['escriturador'])
 
-# rename columns
+# renomeia as colunas
 carteira = carteira.rename(columns={'codigo_de_negociacao': 'codigo'})
 carteira['classe'] = carteira['classe'].str.replace('Fundos', 'FII')
-# remove columns
 carteira = carteira.drop(['cnpj_da_empresa', 'cnpj_do_fundo', 'conta', 'codigo_isin_/_distribuicao', 'quantidade_disponivel', 'quantidade_indisponivel', 'motivo', 'escriturador', 'valor_atualizado'], axis=1)
 
-# fill NaN values
+# trata os valores nulos
 carteira['cnpj'] = carteira['cnpj'].fillna("-")
 carteira['administrador'] = carteira['administrador'].fillna("-")
 
@@ -71,7 +70,7 @@ carteira[categorical_columns] = carteira[categorical_columns].astype('category')
 carteira[float_columns] = carteira[float_columns].astype('float')
 carteira['quantidade'] = carteira['quantidade'].astype('int')
 
-# clean product name
+# limpa a coluna produto
 carteira['produto'] = carteira['produto'].str.split('-').str[1]
 carteira['produto'] = carteira['produto'].str.strip()
 
@@ -84,7 +83,7 @@ carteira.drop(['quantidade_x'], axis=1, inplace=True)
 carteira.drop_duplicates(inplace=True)
 carteira = carteira.rename(columns={'quantidade_y': 'quantidade'})
 
-# reorder columns
+# reordena as colunas
 carteira = carteira[['codigo', 'produto', 'classe', 'tipo', 'administrador', 'cnpj', 'instituicao', 'quantidade', 'preco_de_fechamento']]
 
 #calcula o total

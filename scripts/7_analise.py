@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, ".venv/Lib/site-packages")
+sys.path.insert(0, "venv/Lib/site-packages")
 import pandas as pd
 from prettytable import PrettyTable
 

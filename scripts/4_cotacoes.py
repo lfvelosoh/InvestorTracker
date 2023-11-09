@@ -1,9 +1,16 @@
-import sys
-sys.path.insert(0, "venv/Lib/site-packages")
 import yfinance as yf
 import pandas as pd
+import sqlite3
+from _constants import db_path
 
-df = pd.read_csv('./resultados/codigos.csv') # le o arquivo csv com os códigos
+
+conn = sqlite3.connect(db_path)
+c = conn.cursor()
+
+c.execute("SELECT codigo FROM tickers")
+df = pd.DataFrame(c.fetchall(), columns=['codigo'])
+
+conn.close()
 tickers = df['codigo'].map(lambda x: x + '.SA') # adiciona a extensão .SA para realizar a pesquisa no Yahoo Finance
 
 # função para pegar os preços atuais
@@ -26,7 +33,22 @@ prices.rename(columns={'index': 'codigo'}, inplace=True) #renomeia a coluna inde
 prices['preco_atual'] = prices['preco_atual'].round(2) #arredonda os valores para duas casas decimais
 
 
-# salva o dataframe em um arquivo csv
-prices.to_csv('./resultados/cotacao_atual.csv', index=False)
+# # salva o dataframe em um arquivo csv
+# prices.to_csv('./resultados/cotacao_atual.csv', index=False)
+
+
+conn = sqlite3.connect(db_path)
+c = conn.cursor()
+
+# cria a tabela cotacoes se ela não existir
+c.execute('''CREATE TABLE IF NOT EXISTS prices
+             (codigo text, preco_atual real, data text)''')
+
+# Salva os dados de negotiations na tabela negotiations
+prices.to_sql('prices', conn, if_exists='replace', index=False)
+
+conn.commit()
+conn.close()
+
 
 print('Cotação atual salva com sucesso em ./resultados/cotacao_atual.csv')
